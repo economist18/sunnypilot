@@ -1,6 +1,5 @@
 import numpy as np
 
-from openpilot.sunnypilot.selfdrive.controls.lib import sharp_turn_assist
 from openpilot.sunnypilot.selfdrive.controls.lib.sharp_turn_assist import (
   MAX_ASSIST_SPEED,
   SHARP_TURN_MIN_INTEGRATOR_SPEED,
@@ -8,6 +7,7 @@ from openpilot.sunnypilot.selfdrive.controls.lib.sharp_turn_assist import (
   get_integrator_min_speed,
   get_sharp_turn_preview_curvature,
 )
+from openpilot.sunnypilot.selfdrive.controls.lib import sharp_turn_assist_toggle
 
 
 def _turn_plan(v_ego: float, curvatures: np.ndarray):
@@ -56,10 +56,10 @@ def test_integrator_speed_only_changes_for_sharp_turns():
 
 def test_toggle_file_round_trip(tmp_path, monkeypatch):
   toggle_path = tmp_path / "SharpTurnAssist"
-  monkeypatch.setattr(sharp_turn_assist, "_toggle_path", lambda: toggle_path)
+  monkeypatch.setattr(sharp_turn_assist_toggle, "_toggle_path", lambda: toggle_path)
 
-  assert not sharp_turn_assist.sharp_turn_assist_enabled()
-  sharp_turn_assist.set_sharp_turn_assist_enabled(True)
-  assert sharp_turn_assist.sharp_turn_assist_enabled()
-  sharp_turn_assist.set_sharp_turn_assist_enabled(False)
-  assert not sharp_turn_assist.sharp_turn_assist_enabled()
+  assert not sharp_turn_assist_toggle.sharp_turn_assist_enabled()
+  sharp_turn_assist_toggle.set_sharp_turn_assist_enabled(True)
+  assert sharp_turn_assist_toggle.sharp_turn_assist_enabled()
+  sharp_turn_assist_toggle.set_sharp_turn_assist_enabled(False)
+  assert not sharp_turn_assist_toggle.sharp_turn_assist_enabled()

@@ -1,7 +1,5 @@
 """Bounded low-speed sharp-turn assist helpers."""
 
-import os
-from pathlib import Path
 import numpy as np
 
 from openpilot.selfdrive.controls.lib.drive_helpers import get_curvature_from_plan
@@ -17,29 +15,6 @@ OPPOSING_CURVATURE_THRESHOLD = 0.01
 SHARP_TURN_CURVATURE_THRESHOLD = 0.035
 SHARP_TURN_MIN_INTEGRATOR_SPEED = 2.0
 STOCK_MIN_INTEGRATOR_SPEED = 5.0
-TOGGLE_FILENAME = "SharpTurnAssist"
-
-
-def _toggle_path() -> Path:
-  # Use a registered param only to discover the active params directory. The
-  # custom flag intentionally bypasses the prebuilt native key registry.
-  from openpilot.common.params import Params
-  return Path(Params().get_param_path("ShowAdvancedControls")).parent / TOGGLE_FILENAME
-
-
-def sharp_turn_assist_enabled() -> bool:
-  try:
-    return _toggle_path().read_text().strip() == "1"
-  except OSError:
-    return False
-
-
-def set_sharp_turn_assist_enabled(enabled: bool) -> None:
-  path = _toggle_path()
-  path.parent.mkdir(parents=True, exist_ok=True)
-  temporary_path = path.with_name(f".{path.name}.tmp")
-  temporary_path.write_text("1" if enabled else "0")
-  os.replace(temporary_path, path)
 
 
 def get_integrator_min_speed(enabled: bool, desired_curvature: float) -> float:

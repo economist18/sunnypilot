@@ -13,7 +13,7 @@ from openpilot.common.realtime import DT_MDL
 from openpilot.selfdrive.car.cruise import V_CRUISE_UNSET
 from openpilot.sunnypilot import PARAMS_UPDATE_PERIOD
 from openpilot.sunnypilot.selfdrive.controls.lib.smart_cruise_control import MIN_V, SHARP_TURN_MIN_V
-from openpilot.sunnypilot.selfdrive.controls.lib.sharp_turn_assist import sharp_turn_assist_enabled
+from openpilot.sunnypilot.selfdrive.controls.lib.sharp_turn_assist_toggle import sharp_turn_assist_enabled
 
 VisionState = custom.LongitudinalPlanSP.SmartCruiseControl.VisionState
 

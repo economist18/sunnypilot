@@ -1,7 +1,8 @@
 import numpy as np
 from abc import abstractmethod, ABC
 from openpilot.selfdrive.locationd.helpers import Pose
-from openpilot.sunnypilot.selfdrive.controls.lib.sharp_turn_assist import get_integrator_min_speed, sharp_turn_assist_enabled
+from openpilot.sunnypilot.selfdrive.controls.lib.sharp_turn_assist import get_integrator_min_speed
+from openpilot.sunnypilot.selfdrive.controls.lib.sharp_turn_assist_toggle import sharp_turn_assist_enabled
 
 
 class LatControl(ABC):

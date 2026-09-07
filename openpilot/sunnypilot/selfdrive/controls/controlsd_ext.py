@@ -17,7 +17,7 @@ from openpilot.sunnypilot.livedelay.helpers import get_lat_delay
 from openpilot.sunnypilot.modeld_v2.modeld_base import ModelStateBase
 from openpilot.sunnypilot.selfdrive.controls.lib.blinker_pause_lateral import BlinkerPauseLateral
 from openpilot.sunnypilot.selfdrive.controls.lib.latcontrol_torque_v0 import LatControlTorque as LatControlTorqueV0
-from openpilot.sunnypilot.selfdrive.controls.lib.sharp_turn_assist import sharp_turn_assist_enabled
+from openpilot.sunnypilot.selfdrive.controls.lib.sharp_turn_assist_toggle import sharp_turn_assist_enabled
 
 
 class ControlsExt(ModelStateBase):

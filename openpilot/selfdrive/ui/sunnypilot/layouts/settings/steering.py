@@ -15,7 +15,7 @@ from openpilot.system.ui.widgets import Widget
 from openpilot.selfdrive.ui.sunnypilot.layouts.settings.steering_sub_layouts.lane_change_settings import LaneChangeSettingsLayout
 from openpilot.selfdrive.ui.sunnypilot.layouts.settings.steering_sub_layouts.mads_settings import MadsSettingsLayout
 from openpilot.selfdrive.ui.sunnypilot.layouts.settings.steering_sub_layouts.torque_settings import TorqueSettingsLayout
-from openpilot.sunnypilot.selfdrive.controls.lib.sharp_turn_assist import (
+from openpilot.sunnypilot.selfdrive.controls.lib.sharp_turn_assist_toggle import (
   set_sharp_turn_assist_enabled, sharp_turn_assist_enabled,
 )
 
