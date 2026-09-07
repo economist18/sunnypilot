@@ -32,7 +32,7 @@ class LatControlPID(LatControl):
     else:
       # offset does not contribute to resistive torque
       ff = self.ff_factor * self.get_steer_feedforward(angle_steers_des_no_offset, CS.vEgo)
-      freeze_integrator = steer_limited_by_safety or CS.steeringPressed or CS.vEgo < 5
+      freeze_integrator = self.should_freeze_integrator(CS, steer_limited_by_safety, desired_curvature)
 
       output_torque = self.pid.update(error,
                                 feedforward=ff,

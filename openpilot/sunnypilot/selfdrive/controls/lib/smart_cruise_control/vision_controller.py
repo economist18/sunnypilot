@@ -12,7 +12,8 @@ from openpilot.common.params import Params
 from openpilot.common.realtime import DT_MDL
 from openpilot.selfdrive.car.cruise import V_CRUISE_UNSET
 from openpilot.sunnypilot import PARAMS_UPDATE_PERIOD
-from openpilot.sunnypilot.selfdrive.controls.lib.smart_cruise_control import MIN_V
+from openpilot.sunnypilot.selfdrive.controls.lib.smart_cruise_control import MIN_V, SHARP_TURN_MIN_V
+from openpilot.sunnypilot.selfdrive.controls.lib.sharp_turn_assist import sharp_turn_assist_enabled
 
 VisionState = custom.LongitudinalPlanSP.SmartCruiseControl.VisionState
 
@@ -28,6 +29,8 @@ _LEAVING_LAT_ACC_TH = 1.3  # Lat Acc threshold to trigger leaving turn state.
 _FINISH_LAT_ACC_TH = 1.1  # Lat Acc threshold to trigger the end of the turn cycle.
 
 _A_LAT_REG_MAX = 2.  # Maximum lateral acceleration
+_A_LAT_SHARP_TURN_MAX = 1.8
+_SHARP_TURN_CURVATURE_TH = 0.04  # 25 m radius
 
 _NO_OVERSHOOT_TIME_HORIZON = 4.  # s. Time to use for velocity desired based on a_target when not overshooting.
 
@@ -59,7 +62,8 @@ class SmartCruiseControlVision:
     self.long_override = False
     self.is_enabled = False
     self.is_active = False
-    self.enabled = self.params.get_bool("SmartCruiseControlVision")
+    self.sharp_turn_assist = sharp_turn_assist_enabled()
+    self.enabled = self.params.get_bool("SmartCruiseControlVision") or self.sharp_turn_assist
     self.v_cruise_setpoint = 0.
 
     self.state = VisionState.disabled
@@ -71,13 +75,15 @@ class SmartCruiseControlVision:
 
   def get_v_target_from_control(self) -> float:
     if self.is_active:
-      return max(self.v_target, MIN_V) + self.a_target * _NO_OVERSHOOT_TIME_HORIZON
+      min_v = SHARP_TURN_MIN_V if self.sharp_turn_assist else MIN_V
+      return max(self.v_target, min_v) + self.a_target * _NO_OVERSHOOT_TIME_HORIZON
 
     return V_CRUISE_UNSET
 
   def _update_params(self) -> None:
     if self.frame % int(PARAMS_UPDATE_PERIOD / DT_MDL) == 0:
-      self.enabled = self.params.get_bool("SmartCruiseControlVision")
+      self.sharp_turn_assist = sharp_turn_assist_enabled()
+      self.enabled = self.params.get_bool("SmartCruiseControlVision") or self.sharp_turn_assist
 
   def _update_calculations(self, sm: messaging.SubMaster) -> None:
     if not self.long_enabled:
@@ -97,7 +103,9 @@ class SmartCruiseControlVision:
       max_curve = self.max_pred_lat_acc / (v_ego**2)
 
       # Get the target velocity for the maximum curve
-      self.v_target = (_A_LAT_REG_MAX / max_curve) ** 0.5
+      target_lat_accel = (_A_LAT_SHARP_TURN_MAX
+                          if self.sharp_turn_assist and max_curve >= _SHARP_TURN_CURVATURE_TH else _A_LAT_REG_MAX)
+      self.v_target = (target_lat_accel / max_curve) ** 0.5
 
   def _update_state_machine(self) -> tuple[bool, bool]:
     # ENABLED, ENTERING, TURNING, LEAVING, OVERRIDING
@@ -112,7 +120,8 @@ class SmartCruiseControlVision:
         # ENABLED
         if self.state == VisionState.enabled:
           # Do not enter a turn control cycle if the speed is low.
-          if self.v_ego <= MIN_V:
+          min_v = SHARP_TURN_MIN_V if self.sharp_turn_assist else MIN_V
+          if self.v_ego <= min_v:
             pass
           # If significant lateral acceleration is predicted ahead, then move to Entering turn state.
           elif self.max_pred_lat_acc >= _ENTERING_PRED_LAT_ACC_TH:

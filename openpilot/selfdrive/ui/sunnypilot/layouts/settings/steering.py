@@ -15,6 +15,9 @@ from openpilot.system.ui.widgets import Widget
 from openpilot.selfdrive.ui.sunnypilot.layouts.settings.steering_sub_layouts.lane_change_settings import LaneChangeSettingsLayout
 from openpilot.selfdrive.ui.sunnypilot.layouts.settings.steering_sub_layouts.mads_settings import MadsSettingsLayout
 from openpilot.selfdrive.ui.sunnypilot.layouts.settings.steering_sub_layouts.torque_settings import TorqueSettingsLayout
+from openpilot.sunnypilot.selfdrive.controls.lib.sharp_turn_assist import (
+  set_sharp_turn_assist_enabled, sharp_turn_assist_enabled,
+)
 
 
 class PanelType(IntEnum):
@@ -57,6 +60,14 @@ class SteeringLayout(Widget):
       button_text=lambda: tr("Customize Lane Change"),
       button_width=800,
       callback=lambda: self._set_current_panel(PanelType.LANE_CHANGE)
+    )
+    self._sharp_turn_assist_toggle = toggle_item_sp(
+      initial_state=sharp_turn_assist_enabled(),
+      callback=set_sharp_turn_assist_enabled,
+      title=lambda: tr("Experimental Sharp-Turn Assist"),
+      description=lambda: tr("Improves low-speed tracking and slows earlier for very tight model-predicted turns. " +
+                             "Automatic slowing requires openpilot longitudinal control. " +
+                             "Disable to use the original sunnypilot staging behavior."),
     )
     self._blinker_control_toggle = toggle_item_sp(
       param="BlinkerPauseLateralControl",
@@ -103,6 +114,8 @@ class SteeringLayout(Widget):
       LineSeparatorSP(40),
       self._lane_change_settings_button,
       LineSeparatorSP(40),
+      self._sharp_turn_assist_toggle,
+      LineSeparatorSP(40),
       self._blinker_control_toggle,
       self._blinker_control_options,
       self._blinker_reengage_delay,
@@ -128,6 +141,7 @@ class SteeringLayout(Widget):
       self._mads_toggle.set_description(f"<b>{self._mads_check_compat_desc}</b><br><br>{self._mads_base_desc}")
 
     self._mads_toggle.action_item.set_enabled(ui_state.is_offroad())
+    self._sharp_turn_assist_toggle.action_item.set_enabled(ui_state.is_offroad())
     self._mads_settings_button.action_item.set_enabled(ui_state.is_offroad() and self._mads_toggle.action_item.get_state())
     self._blinker_control_options.set_visible(self._blinker_control_toggle.action_item.get_state())
     self._blinker_reengage_delay.set_visible(self._blinker_control_toggle.action_item.get_state())

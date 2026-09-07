@@ -1,6 +1,7 @@
 import numpy as np
 from abc import abstractmethod, ABC
 from openpilot.selfdrive.locationd.helpers import Pose
+from openpilot.sunnypilot.selfdrive.controls.lib.sharp_turn_assist import get_integrator_min_speed, sharp_turn_assist_enabled
 
 
 class LatControl(ABC):
@@ -12,6 +13,7 @@ class LatControl(ABC):
 
     # we define the steer torque scale as [-1.0...1.0]
     self.steer_max = 1.0
+    self.sharp_turn_assist = sharp_turn_assist_enabled()
 
   @abstractmethod
   def update(self, active: bool, CS, VM, params, steer_limited_by_safety: bool, desired_curvature: float, calibrated_pose: Pose | None,
@@ -20,6 +22,10 @@ class LatControl(ABC):
 
   def reset(self):
     self.sat_time = 0.
+
+  def should_freeze_integrator(self, CS, steer_limited_by_safety: bool, desired_curvature: float) -> bool:
+    min_speed = get_integrator_min_speed(self.sharp_turn_assist, desired_curvature)
+    return bool(steer_limited_by_safety or CS.steeringPressed or CS.vEgo < min_speed)
 
   def _check_saturation(self, saturated, CS, steer_limited_by_safety, curvature_limited):
     # Saturated only if control output is not being limited by car torque/angle rate limits

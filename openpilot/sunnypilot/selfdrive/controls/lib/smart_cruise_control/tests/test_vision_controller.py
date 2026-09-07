@@ -15,7 +15,8 @@ from openpilot.common.params import Params
 from openpilot.common.realtime import DT_MDL
 from openpilot.selfdrive.car.cruise import V_CRUISE_UNSET
 from openpilot.selfdrive.modeld.constants import ModelConstants
-from openpilot.sunnypilot.selfdrive.controls.lib.smart_cruise_control import MIN_V
+from openpilot.sunnypilot.selfdrive.controls.lib.smart_cruise_control import MIN_V, SHARP_TURN_MIN_V
+from openpilot.sunnypilot.selfdrive.controls.lib.smart_cruise_control import vision_controller
 from openpilot.sunnypilot.selfdrive.controls.lib.smart_cruise_control.vision_controller import SmartCruiseControlVision, _ENTERING_PRED_LAT_ACC_TH
 from openpilot.common.test import OpenpilotTestCase
 
@@ -135,6 +136,22 @@ class TestSmartCruiseControlVision(OpenpilotTestCase):
       self.scc_v.update(self.sm, True, False, 0., 0., 0.)
     assert self.scc_v.state == VisionState.disabled
     assert not self.scc_v.is_active
+
+  def test_sharp_turn_assist_enables_lower_curve_target(self, monkeypatch):
+    self.params.put_bool("SmartCruiseControlVision", False, block=True)
+    monkeypatch.setattr(vision_controller, "sharp_turn_assist_enabled", lambda: True)
+    self.scc_v = SmartCruiseControlVision()
+
+    n = len(ModelConstants.T_IDXS)
+    self.sm["modelV2"].velocity.x = [10.0] * n
+    self.sm["modelV2"].orientationRate.z = [2.0] * n  # 0.2 1/m predicted curvature
+
+    self.scc_v.update(self.sm, True, False, 10.0, 0.0, 0.0)
+    self.scc_v.update(self.sm, True, False, 10.0, 0.0, 0.0)
+
+    assert self.scc_v.enabled
+    assert self.scc_v.state == VisionState.entering
+    assert SHARP_TURN_MIN_V <= self.scc_v.v_target < MIN_V
 
   def test_disabled(self):
     for _ in range(int(10. / DT_MDL)):

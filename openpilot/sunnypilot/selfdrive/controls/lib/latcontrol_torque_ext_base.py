@@ -134,7 +134,7 @@ class LatControlTorqueExtBase:
       self.lateral_jerk_measurement = self.lat_jerk_friction_factor * self.actual_lateral_jerk
 
   def update_output_torque(self, CS):
-    freeze_integrator = self._steer_limited_by_safety or CS.steeringPressed or CS.vEgo < 5
+    freeze_integrator = self.lac_torque.should_freeze_integrator(CS, self._steer_limited_by_safety, self._desired_curvature)
     self._output_torque = self._pid.update(self._pid_log.error,
                                            feedforward=self._ff,
                                            speed=CS.vEgo,
